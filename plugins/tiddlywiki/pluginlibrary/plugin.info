@@ -1,0 +1,6 @@
+{
+	"title": "$:/plugins/tiddlywiki/pluginlibrary",
+	"name": "Plugin Library",
+	"description": "Plugin library builder",
+	"list": "readme"
+}

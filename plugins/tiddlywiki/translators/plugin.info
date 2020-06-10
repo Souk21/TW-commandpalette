@@ -1,0 +1,6 @@
+{
+	"title": "$:/plugins/tiddlywiki/translators",
+	"name": "Translators",
+	"description": "Translation editing tools",
+	"list": "readme"
+}

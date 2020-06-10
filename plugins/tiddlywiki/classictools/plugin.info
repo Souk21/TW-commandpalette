@@ -1,0 +1,6 @@
+{
+	"title": "$:/plugins/tiddlywiki/classictools",
+	"name": "Classic Tools",
+	"description": "TiddlyWiki Classic tools",
+	"list": "readme"
+}

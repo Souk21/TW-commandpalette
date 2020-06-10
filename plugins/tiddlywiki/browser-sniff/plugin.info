@@ -1,0 +1,6 @@
+{
+	"title": "$:/plugins/tiddlywiki/browser-sniff",
+	"name": "Browser Sniff",
+	"description": "Browser feature detection",
+	"list": "readme usage"
+}

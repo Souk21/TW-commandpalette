@@ -1,0 +1,6 @@
+{
+	"title": "$:/plugins/tiddlywiki/xmldom",
+	"name": "xmldom",
+	"description": "xmldom library",
+	"list": "readme license"
+}

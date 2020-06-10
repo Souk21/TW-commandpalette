@@ -1,0 +1,6 @@
+{
+	"title": "$:/plugins/tiddlywiki/powered-by-tiddlywiki",
+	"name": "Powered By TiddlyWiki",
+	"description": "Powered by TiddlyWiki banner",
+	"list": "readme"
+}

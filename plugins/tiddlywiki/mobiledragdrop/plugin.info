@@ -1,0 +1,7 @@
+{
+	"title": "$:/plugins/tiddlywiki/mobiledragdrop",
+	"name": "Mobile Drag Drop",
+	"description": "Mobile drag and drop shim",
+	"author": "Tim Ruffles",
+	"list": "readme license"
+}

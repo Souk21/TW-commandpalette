@@ -1,0 +1,4 @@
+title: $:/core/images/menu-button
+tags: $:/tags/Image
+
+<svg width="22pt" height="22pt" class="tc-image-menu-button tc-image-button" viewBox="0 0 128 128"><rect width="128" height="16" y="16" rx="8"/><rect width="128" height="16" y="56" rx="8"/><rect width="128" height="16" y="96" rx="8"/></svg>

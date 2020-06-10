@@ -1,0 +1,7 @@
+{
+	"title": "$:/plugins/tiddlywiki/xlsx-utils",
+	"name": "XLSX Utils",
+	"description": "XLSX spreadsheet utilities",
+	"list": "readme controls license",
+	"dependents": ["$:/plugins/tiddlywiki/jszip"]
+}

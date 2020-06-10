@@ -1,0 +1,6 @@
+{
+	"title": "$:/plugins/tiddlywiki/upgrade",
+	"name": "Upgrade",
+	"description": "Upgrade system for TiddlyWiki versions",
+	"list": "readme"
+}

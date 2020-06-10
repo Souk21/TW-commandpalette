@@ -1,0 +1,11 @@
+title: $:/core/ui/PluginInfo/Default/contents
+
+\define lingo-base() $:/language/TiddlerInfo/Advanced/PluginInfo/
+<<lingo Hint>>
+<ul>
+<$list filter="[all[current]plugintiddlers[]sort[title]]" emptyMessage=<<lingo Empty/Hint>>>
+<li>
+<$link />
+</li>
+</$list>
+</ul>
