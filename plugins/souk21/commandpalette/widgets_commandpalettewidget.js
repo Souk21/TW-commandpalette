@@ -574,10 +574,10 @@ Command Palette Widget
 			this.hint.innerText = 'Search tags';
 			let searches;
 			if (terms.length === 0) {
-				searches = $tw.wiki.filterTiddlers('[all[]tags[]!is[system]]');
+				searches = $tw.wiki.filterTiddlers('[!is[system]tags[]][is[system]tags[]][all[shadows]tags[]]');
 			}
 			else {
-				searches = $tw.wiki.filterTiddlers('[all[]tags[]!is[system]search[' + terms + ']]');
+				searches = $tw.wiki.filterTiddlers('[all[]tags[]!is[system]search[' + terms + ']][all[]tags[]is[system]search[' + terms + ']][all[shadows]tags[]search['+terms+']]');
 			}
 			searches = searches.map(s => { return { name: s }; });
 			this.showResults(searches);
@@ -627,7 +627,7 @@ Command Palette Widget
 				}
 				searchTerms.push(splits[i]);
 			}
-			let tagsFilter = `[${tags.reduce((a, c) => { return a + 'tag[' + c + ']' }, '')}]`;
+			let tagsFilter = `[all[tiddlers+system+shadows]${tags.reduce((a, c) => { return a + 'tag[' + c + ']' }, '')}]`;
 			if (searchTerms.length !== 0) {
 				tagsFilter = tagsFilter.substr(0, tagsFilter.length - 1); //remove last ']'
 				tagsFilter += `search[${searchTerms.join(' ')}]]`;
