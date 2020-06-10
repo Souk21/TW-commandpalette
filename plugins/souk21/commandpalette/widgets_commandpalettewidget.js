@@ -489,6 +489,7 @@ Command Palette Widget
 				this.createTiddlerResolver(e);
 				return;
 			}
+			if (this.currentSelection == 0) return;
 			let selectionTitle = this.currentResults[this.currentSelection - 1].result.name;
 			this.closePalette();
 			this.navigateTo(selectionTitle);
