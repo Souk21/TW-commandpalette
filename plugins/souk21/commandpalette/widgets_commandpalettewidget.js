@@ -545,7 +545,11 @@ Command Palette Widget
 				history = [];
 			}
 			history = [...history.reverse().map(x => x.title), ...$tw.wiki.filterTiddlers('[list[$:/StoryList]]')];
-			return Array.from(new Set(history.filter(t => $tw.wiki.tiddlerExists(t))));
+			return Array.from(new Set(history.filter(t => this.tiddlerOrShadowExists(t))));
+		}
+
+		tiddlerOrShadowExists (title) {
+			return $tw.wiki.tiddlerExists(title) || $tw.wiki.isShadowTiddler(title);
 		}
 
 		defaultProvider(terms) {
@@ -578,7 +582,7 @@ Command Palette Widget
 				searches = $tw.wiki.filterTiddlers('[!is[system]tags[]][is[system]tags[]][all[shadows]tags[]]');
 			}
 			else {
-				searches = $tw.wiki.filterTiddlers('[all[]tags[]!is[system]search[' + terms + ']][all[]tags[]is[system]search[' + terms + ']][all[shadows]tags[]search['+terms+']]');
+				searches = $tw.wiki.filterTiddlers('[all[]tags[]!is[system]search[' + terms + ']][all[]tags[]is[system]search[' + terms + ']][all[shadows]tags[]search[' + terms + ']]');
 			}
 			searches = searches.map(s => { return { name: s }; });
 			this.showResults(searches);
@@ -607,7 +611,7 @@ Command Palette Widget
 				if (taggedTiddlers.length !== 0) {
 					if (tags.length === 1) {
 						let tag = tags[0];
-						let tagTiddlerExists = $tw.wiki.tiddlerExists(tag);
+						tagTiddlerExists = this.tiddlerOrShadowExists(tag);
 						if (tagTiddlerExists && searchTerms.some(s => tag.includes(s))) searches.push(tag);
 					}
 					searches = [...searches, ...taggedTiddlers];
@@ -765,7 +769,7 @@ Command Palette Widget
 				}
 				if (date !== "Invalid Date") {
 					results[i].hint = date;
-					results[i].action = () => {};
+					results[i].action = () => { };
 					alreadyMatched = true;
 				}
 				let isTag = $tw.wiki.getTiddlersWithTag(initialResult.name).length !== 0;
@@ -778,7 +782,7 @@ Command Palette Widget
 					results[i].hint = 'Tag'; //Todo more info?
 					alreadyMatched = true;
 				}
-				let isTiddler = $tw.wiki.tiddlerExists(initialResult.name);
+				let isTiddler = this.tiddlerOrShadowExists(initialResult.name);
 				if (isTiddler) {
 					if (alreadyMatched) {
 						insertResult(i, { ...results[i] });
@@ -904,7 +908,7 @@ Command Palette Widget
 			result.action(event);
 			event.stopPropagation();
 			if (result.immediate) {
-				this.validateSelection();
+				this.validateSelection(event);
 				return;
 			}
 			if (!result.keepPalette) {
