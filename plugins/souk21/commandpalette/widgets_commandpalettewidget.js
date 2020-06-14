@@ -27,6 +27,9 @@ Command Palette Widget
 				maxResultHintSize: 45,
 				neverBasic: false,
 				smoothScroll: true,
+				showHistoryOnOpen: true,
+				escapeGoesBack: true,
+				alwaysPassSelection: true,
 			}
 			this.settings = {};
 			this.commandHistoryPath = '$:/plugins/souk21/commandpalette/CommandPaletteHistory';
@@ -91,7 +94,8 @@ Command Palette Widget
 			this.actions = [];
 			this.actions.push({ name: "Refresh Command Palette", action: (e) => { this.refreshCommandPalette(); this.promptCommand('') }, keepPalette: true });
 			this.actions.push({ name: "Explorer", action: (e) => this.explorer(e), keepPalette: true });
-			this.actions.push({ name: "New Command Wizard", action: (e) => this.newCommandWizard(), keepPalette: true });
+			this.actions.push({ name: "See History", action: (e) => this.showHistory(e), keepPalette: true });
+			this.actions.push({ name: "New Command Wizard", action: (e) => this.newCommandWizard(e), keepPalette: true });
 			this.actions.push({
 				name: "Add tag to tiddler",
 				action: (e) => this.tagOperation(e, 'Pick tiddler to tag', 'Pick tag to add (⇧⏎ to add multiple)',
@@ -269,18 +273,39 @@ Command Palette Widget
 		}
 
 		setSetting(name, value) {
+			//doing the validation here too (it's also done in refreshSettings, so you can load you own settings with a json file)
+			if (typeof value === 'string') {
+				if (value === 'true') value = true;
+				if (value === 'false') value = false;
+			}
 			this.settings[name] = value;
 			$tw.wiki.setTiddlerData(this.settingsPath, this.settings);
 			this.refreshCosmetics();
 		}
 
+		//loadSettings?
 		refreshSettings() {
+			//get user or default settings
 			this.settings = $tw.wiki.getTiddlerData(this.settingsPath, { ...this.defaultSettings });
+			//Adding eventual missing properties to current user settings
+			for (let prop in this.defaultSettings) {
+				if (!this.defaultSettings.hasOwnProperty(prop)) continue;
+				if (this.settings[prop] === undefined) {
+					this.settings[prop] = this.defaultSettings[prop];
+				}
+			}
+			//cast all booleans
+			for (let prop in this.settings) {
+				if (!this.settings.hasOwnProperty(prop)) continue;
+				if (typeof this.settings[prop] !== 'string') continue;
+				if (this.settings[prop].toLowerCase() === 'true') this.settings[prop] = true;
+				if (this.settings[prop].toLowerCase() === 'false') this.settings[prop] = false;
+			}
 			this.refreshCosmetics();
 		}
 
 		refreshCosmetics() {
-			if (this.settings.smoothScroll === 'true' || this.settings.smoothScroll === true) {
+			if (this.settings.smoothScroll) {
 				this.scrollDiv.classList.add('cp-smooth');
 			} else {
 				this.scrollDiv.classList.remove('cp-smooth');
@@ -299,6 +324,7 @@ Command Palette Widget
 			this.history = $tw.wiki.getTiddlerData(this.commandHistoryPath, { history: [] }).history;
 
 			$tw.rootWidget.addEventListener('open-command-palette', (e) => this.openPalette(e));
+			$tw.rootWidget.addEventListener('open-command-palette-selection', (e) => this.openPaletteSelection(e));
 			this.div = this.createElement('div', { className: 'commandpalette' });
 			this.input = this.createElement('input', { type: 'text' });
 			this.hint = this.createElement('div', { className: 'commandpalettehint commandpalettehintmain' });
@@ -422,13 +448,25 @@ Command Palette Widget
 				e.stopPropagation();
 			}
 		}
+		openPaletteSelection(e) {
+			let selection = window.getSelection().toString();
+			e.param = selection;
+			this.openPalette(e);
+		}
 		openPalette(e) {
 			this.isOpened = true;
 			this.allowInputFieldSelection = false;
+			this.goBack = undefined;
 			this.blockProviderChange = false;
-			this.input.value = e.param === undefined ? "" : e.param;
+			this.input.value = '';
+			if (e.param !== undefined) {
+				this.input.value = e.param;
+			}
+			if (this.settings.alwaysPassSelection) {
+				this.input.value += window.getSelection().toString();
+			}
 			this.currentSelection = 0;
-			this.onInput(this.input.value); //Trigger 'empty' results on open
+			this.onInput(this.input.value); //Trigger results on open
 			this.div.style.display = 'flex';
 			this.input.focus();
 		}
@@ -438,7 +476,13 @@ Command Palette Widget
 		}
 		onKeyDown(e) {
 			if (e.key === 'Escape') {
-				this.closePalette();
+				//									\/ There's no previous state
+				if (!this.settings.escapeGoesBack || this.goBack === undefined) {
+					this.closePalette();
+				} else {
+					this.goBack();
+					this.goBack = undefined;
+				}
 			}
 			else if (e.key === 'ArrowUp') {
 				event.preventDefault();
@@ -502,6 +546,27 @@ Command Palette Widget
 			});
 		}
 
+		showHistory () {
+			this.hint.innerText = 'History';
+			this.currentProvider = (terms) => {
+				let results;
+				if (terms.length === 0) {
+					results = this.getHistory();
+				} else {
+					results = this.getHistory().filter(h => h.includes(terms));
+				}
+				results = results.map(r => {return {name: r, action: () => {this.navigateTo(r); this.closePalette();}}});
+				this.showResults(results);
+			};
+			this.currentResolver = (e) => {
+				if (this.currentSelection === 0) return;
+				this.currentResults[this.currentSelection - 1].result.action(e);
+			};
+			this.input.value = '';
+			this.blockProviderChange = true;
+			this.onInput(this.input.value);
+		}
+
 		setSelectionToFirst() {
 			let sel = 1;
 			if (this.allowInputFieldSelection || this.currentResults.length === 0) {
@@ -548,7 +613,7 @@ Command Palette Widget
 			return Array.from(new Set(history.filter(t => this.tiddlerOrShadowExists(t))));
 		}
 
-		tiddlerOrShadowExists (title) {
+		tiddlerOrShadowExists(title) {
 			return $tw.wiki.tiddlerExists(title) || $tw.wiki.isShadowTiddler(title);
 		}
 
@@ -557,7 +622,11 @@ Command Palette Widget
 			let searches;
 			if (terms.startsWith('\\')) terms = terms.substr(1);
 			if (terms.length === 0) {
-				searches = this.getHistory().map(s => { return { name: s, hint: 'history' } });
+				if (this.settings.showHistoryOnOpen) {
+					searches = this.getHistory().map(s => { return { name: s, hint: 'history' } });
+				} else {
+					searches = [];
+				}
 			}
 			else {
 				searches = this.searchSteps.reduce((a, c) => [...a, ...c(terms)], []);
@@ -611,7 +680,7 @@ Command Palette Widget
 				if (taggedTiddlers.length !== 0) {
 					if (tags.length === 1) {
 						let tag = tags[0];
-						tagTiddlerExists = this.tiddlerOrShadowExists(tag);
+						let tagTiddlerExists = this.tiddlerOrShadowExists(tag);
 						if (tagTiddlerExists && searchTerms.some(s => tag.includes(s))) searches.push(tag);
 					}
 					searches = [...searches, ...taggedTiddlers];
@@ -647,9 +716,12 @@ Command Palette Widget
 			let isBoolean = (terms) => terms.length !== 0 && terms.match(/(true\b)|(false\b)/gmi) !== null;
 			this.showResults([
 				this.settingResultBuilder('Max results', 'maxResults', 'Choose the maximum number of results', isNumerical, 'Error: value must be a positive integer'),
-				this.settingResultBuilder('Max hint size', 'maxResultHintSize', 'Choose the maximum hint length', isNumerical, 'Error: value must be a positive integer'),
+				this.settingResultBuilder('Show history on open', 'showHistoryOnOpen', 'Chose whether to show the history when you open the palette', isBoolean, 'Error: value must be \'true\' or \'false\''),
+				this.settingResultBuilder('Escape to go back', 'escapeGoesBack', 'Chose whether ESC should go back when possible', isBoolean, 'Error: value must be \'true\' or \'false\''),
+				this.settingResultBuilder('Use selection as search query', 'alwaysPassSelection', 'Chose your current selection is passed to the command palette', isBoolean, 'Error: value must be \'true\' or \'false\''),
 				this.settingResultBuilder('Smooth Scrolling', 'smoothScroll', 'Chose whether the results scroll smoothly', isBoolean, 'Error: value must be \'true\' or \'false\''),
-				this.settingResultBuilder('Never Basic', 'neverBasic', 'Chose whether to override basic prompts to show filter', isBoolean, 'Error: value must be \'true\' or \'false\''),
+				this.settingResultBuilder('Never Basic', 'neverBasic', 'Chose whether to override basic prompts to show filter operation', isBoolean, 'Error: value must be \'true\' or \'false\''),
+				this.settingResultBuilder('Field preview max size', 'maxResultHintSize', 'Choose the maximum hint length for field preview', isNumerical, 'Error: value must be a positive integer'),
 			]);
 		}
 
@@ -659,6 +731,11 @@ Command Palette Widget
 
 		settingsResolver(e) {
 			if (this.currentSelection === 0) return;
+			this.goBack = () => {
+				this.input.value = '|';
+				this.blockProviderChange = false;
+				this.onInput(this.input.value);
+			}
 			this.currentResults[this.currentSelection - 1].result.action();
 		}
 
@@ -681,6 +758,7 @@ Command Palette Widget
 					let input = this.input.value;
 					if (validator(input)) {
 						this.setSetting(settingName, input);
+						this.goBack = undefined;
 						this.blockProviderChange = false;
 						this.allowInputFieldSelection = false;
 						this.promptCommand('|');
@@ -689,6 +767,7 @@ Command Palette Widget
 					let action = this.currentResults[this.currentSelection - 1].result.action;
 					if (action) {
 						action();
+						this.goBack = undefined;
 						this.blockProviderChange = false;
 						this.allowInputFieldSelection = false;
 						this.promptCommand('|');
@@ -904,6 +983,14 @@ Command Palette Widget
 			if (this.currentSelection === 0)
 				return;
 			let result = this.actions.find(a => a.name === this.currentResults[this.currentSelection - 1].innerText);
+			if (result.keepPalette) {
+				let curInput = this.input.value;
+				this.goBack = () => {
+					this.input.value = curInput;
+					this.blockProviderChange = false;
+					this.onInput(this.input.value);
+				};
+			}
 			this.updateCommandHistory(result);
 			result.action(event);
 			event.stopPropagation();

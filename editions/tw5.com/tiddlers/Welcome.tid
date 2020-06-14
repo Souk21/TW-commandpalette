@@ -5,7 +5,15 @@ type: text/vnd.tiddlywiki
 
 Try pressing `ctrl+P` to open the command palette
 
-Type `?` for help
+From here, you can start searching, or type one of these prefixes:
+
+* `>` search/execute commands
+* `?` help
+* `#` search tags
+* `@` search tiddler with this tag
+* `[` filter operation
+* `+` new tiddler (optional //@tags//)
+* `|` command palette settings
 
 Please keep in mind this is still a ''prototype'', do ''NOT'' import it to your tiddlywiki without ''doing a backup first'' !
 
