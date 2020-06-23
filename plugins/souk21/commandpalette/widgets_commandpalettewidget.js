@@ -325,6 +325,7 @@ Command Palette Widget
 
 			$tw.rootWidget.addEventListener('open-command-palette', (e) => this.openPalette(e));
 			$tw.rootWidget.addEventListener('open-command-palette-selection', (e) => this.openPaletteSelection(e));
+			$tw.rootWidget.addEventListener('insert-command-palette-result', (e) => this.insertSelectedResult(e));
 			this.div = this.createElement('div', { className: 'commandpalette' });
 			this.input = this.createElement('input', { type: 'text' });
 			this.hint = this.createElement('div', { className: 'commandpalettehint commandpalettehintmain' });
@@ -449,7 +450,8 @@ Command Palette Widget
 			}
 		}
 		openPaletteSelection(e) {
-			let selection = window.getSelection().toString();
+			// let selection = window.getSelection().toString();
+			let selection = this.getCurrentSelection();
 			e.param = selection;
 			this.openPalette(e);
 		}
@@ -458,21 +460,40 @@ Command Palette Widget
 			this.allowInputFieldSelection = false;
 			this.goBack = undefined;
 			this.blockProviderChange = false;
+			let activeElement = this.getActiveElement();
+			this.previouslyFocused = {element:activeElement, start: activeElement.selectionStart, end: activeElement.selectionEnd};
 			this.input.value = '';
 			if (e.param !== undefined) {
 				this.input.value = e.param;
 			}
 			if (this.settings.alwaysPassSelection) {
-				this.input.value += window.getSelection().toString();
+				this.input.value += this.getCurrentSelection();
 			}
 			this.currentSelection = 0;
 			this.onInput(this.input.value); //Trigger results on open
 			this.div.style.display = 'flex';
 			this.input.focus();
 		}
+
+		insertSelectedResult() {
+			if (!this.isOpened) return;
+			if (this.currentSelection === 0) return; //TODO: what to do here?
+			let previous = this.previouslyFocused;
+			let previousValue = previous.element.value;
+			if (previousValue == undefined) return;
+			let selection = this.currentResults[this.currentSelection - 1].result.name;
+			if (previous.start !== previous.end) {
+				this.previouslyFocused.element.value = previousValue.substring(0, previous.start) + selection + previousValue.substring(previous.end);
+			} else {
+				this.previouslyFocused.element.value = previousValue.substring(0, previous.start) + selection + previousValue.substring(previous.start);
+			}
+			this.closePalette();
+		}
+
 		closePalette() {
 			this.div.style.display = 'none';
 			this.isOpened = false;
+			this.previouslyFocused.element.focus();
 		}
 		onKeyDown(e) {
 			if (e.key === 'Escape') {
@@ -1002,6 +1023,32 @@ Command Palette Widget
 				this.closePalette();
 			}
 		}
+
+		getCurrentSelection () {
+			let selection = window.getSelection().toString();
+			if (selection !== '') return selection;
+			let activeElement = this.getActiveElement();
+			if (activeElement === undefined || activeElement.selectionStart === undefined) return '';
+			if (activeElement.selectionStart > activeElement.selectionEnd) {
+				return activeElement.value.substring(activeElement.selectionStart, activeElement.selectionEnd);
+			} else {
+				return activeElement.value.substring(activeElement.selectionEnd, activeElement.selectionStart);
+			}
+		}
+		getActiveElement(element = document.activeElement) {
+			const shadowRoot = element.shadowRoot
+			const contentDocument = element.contentDocument
+
+			if (shadowRoot && shadowRoot.activeElement) {
+			  return this.getActiveElement(shadowRoot.activeElement)
+			}
+
+			if (contentDocument && contentDocument.activeElement) {
+			  return this.getActiveElement(contentDocument.activeElement)
+			}
+
+			return element
+		  }
 		createElement(name, proprieties, styles) {
 			let el = this.document.createElement(name);
 			for (let [propriety, value] of Object.entries(proprieties || {})) {

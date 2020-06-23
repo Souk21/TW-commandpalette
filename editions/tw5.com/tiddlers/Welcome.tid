@@ -17,4 +17,12 @@ From here, you can start searching, or type one of these prefixes:
 
 Please keep in mind this is still a ''prototype'', do ''NOT'' import it to your tiddlywiki without ''doing a backup first'' !
 
+By default, the search field is filled with your current selection when you open the palette
+
+`ctrl+shift+P` opens the palette in command mode
+
+`ctrl+shift+I` inserts the current result in the previously focused text field
+
+All keyboard shortcuts are modifiable in the [[$:/ControlPanel]]
+
 source: https://github.com/Souk21/TW-commandpalette
