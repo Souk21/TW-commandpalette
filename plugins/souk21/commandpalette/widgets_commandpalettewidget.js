@@ -518,8 +518,8 @@ Command Palette Widget
 				}
 			}
 			else if (e.key === 'ArrowUp') {
-				event.preventDefault();
-				event.stopPropagation();
+				e.preventDefault();
+				e.stopPropagation();
 				let sel = this.currentSelection - 1;
 
 				if (sel === 0) {
@@ -532,8 +532,8 @@ Command Palette Widget
 				this.setSelection(sel);
 			}
 			else if (e.key === 'ArrowDown') {
-				event.preventDefault();
-				event.stopPropagation();
+				e.preventDefault();
+				e.stopPropagation();
 				let sel = (this.currentSelection + 1) % (this.currentResults.length + 1);
 				if (!this.allowInputFieldSelection && sel === 0 && this.currentResults.length !== 0) {
 					sel = 1;
@@ -541,8 +541,8 @@ Command Palette Widget
 				this.setSelection(sel);
 			}
 			else if (e.key === 'Enter') {
-				event.preventDefault();
-				event.stopPropagation();
+				e.preventDefault();
+				e.stopPropagation();
 				this.validateSelection(e);
 			}
 		}
@@ -557,8 +557,8 @@ Command Palette Widget
 			resultDiv.addEventListener('click', (e) => { this.setSelection(id + 1); this.validateSelection(e); });
 			this.scrollDiv.append(resultDiv);
 		}
-		validateSelection(event) {
-			this.currentResolver(event);
+		validateSelection(e) {
+			this.currentResolver(e);
 		}
 		defaultResolver(e) {
 			if (e.getModifierState('Shift')) {
@@ -849,13 +849,13 @@ Command Palette Widget
 		}
 
 		tmMessageBuilder(message, params = {}) {
-			return (event) => {
-				let e = {
+			return (e) => {
+				let event = {
 					type: message,
 					paramObject: params,
-					event: event,
+					event: e,
 				};
-				this.parentWidget.dispatchEvent(e);
+				this.parentWidget.dispatchEvent(event);
 			};
 		}
 		actionProvider(terms) {
@@ -1035,7 +1035,7 @@ Command Palette Widget
 			}
 			return results;
 		}
-		actionResolver(event) {
+		actionResolver(e) {
 			if (this.currentSelection === 0)
 				return;
 			let result = this.actions.find(a => a.name === this.currentResults[this.currentSelection - 1].innerText);
@@ -1048,10 +1048,10 @@ Command Palette Widget
 				};
 			}
 			this.updateCommandHistory(result);
-			result.action(event);
-			event.stopPropagation();
+			result.action(e);
+			e.stopPropagation();
 			if (result.immediate) {
-				this.validateSelection(event);
+				this.validateSelection(e);
 				return;
 			}
 			if (!result.keepPalette) {
