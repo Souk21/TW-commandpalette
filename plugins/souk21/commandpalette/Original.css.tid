@@ -76,6 +76,3 @@ type: text/vnd.tiddlywiki
     position: relative;
     border-radius: 0px 0px var(--palette-radius) var(--palette-radius);
 }
-.cp-smooth{
-    scroll-behavior: smooth;
-}
