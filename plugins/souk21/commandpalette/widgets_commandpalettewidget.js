@@ -461,7 +461,7 @@ Command Palette Widget
 			this.goBack = undefined;
 			this.blockProviderChange = false;
 			let activeElement = this.getActiveElement();
-			this.previouslyFocused = {element:activeElement, start: activeElement.selectionStart, end: activeElement.selectionEnd};
+			this.previouslyFocused = { element: activeElement, start: activeElement.selectionStart, end: activeElement.selectionEnd, caretPos: activeElement.selectionEnd };
 			this.input.value = '';
 			if (e.param !== undefined) {
 				this.input.value = e.param;
@@ -487,13 +487,14 @@ Command Palette Widget
 			} else {
 				this.previouslyFocused.element.value = previousValue.substring(0, previous.start) + selection + previousValue.substring(previous.start);
 			}
+			this.previouslyFocused.caretPos = previous.start + selection.length;
 			this.closePalette();
 		}
 
 		closePalette() {
 			this.div.style.display = 'none';
 			this.isOpened = false;
-			this.previouslyFocused.element.focus();
+			this.focusAtCaretPosition(this.previouslyFocused.element, this.previouslyFocused.caretPos);
 		}
 		onKeyDown(e) {
 			if (e.key === 'Escape') {
@@ -567,7 +568,7 @@ Command Palette Widget
 			});
 		}
 
-		showHistory () {
+		showHistory() {
 			this.hint.innerText = 'History';
 			this.currentProvider = (terms) => {
 				let results;
@@ -576,7 +577,7 @@ Command Palette Widget
 				} else {
 					results = this.getHistory().filter(h => h.includes(terms));
 				}
-				results = results.map(r => {return {name: r, action: () => {this.navigateTo(r); this.closePalette();}}});
+				results = results.map(r => { return { name: r, action: () => { this.navigateTo(r); this.closePalette(); } } });
 				this.showResults(results);
 			};
 			this.currentResolver = (e) => {
@@ -1024,7 +1025,7 @@ Command Palette Widget
 			}
 		}
 
-		getCurrentSelection () {
+		getCurrentSelection() {
 			let selection = window.getSelection().toString();
 			if (selection !== '') return selection;
 			let activeElement = this.getActiveElement();
@@ -1040,15 +1041,42 @@ Command Palette Widget
 			const contentDocument = element.contentDocument
 
 			if (shadowRoot && shadowRoot.activeElement) {
-			  return this.getActiveElement(shadowRoot.activeElement)
+				return this.getActiveElement(shadowRoot.activeElement)
 			}
 
 			if (contentDocument && contentDocument.activeElement) {
-			  return this.getActiveElement(contentDocument.activeElement)
+				return this.getActiveElement(contentDocument.activeElement)
 			}
 
 			return element
-		  }
+		}
+		focusAtCaretPosition(el, caretPos) {
+			if (el !== null) {
+				el.value = el.value;
+				// ^ this is used to not only get "focus", but
+				// to make sure we don't have it everything -selected-
+				// (it causes an issue in chrome, and having it doesn't hurt any other browser)
+				if (el.createTextRange) {
+					var range = el.createTextRange();
+					range.move('character', caretPos);
+					range.select();
+					return true;
+				}
+				else {
+					// (el.selectionStart === 0 added for Firefox bug)
+					if (el.selectionStart || el.selectionStart === 0) {
+						el.focus();
+						el.setSelectionRange(caretPos, caretPos);
+						return true;
+					}
+
+					else { // fail city, fortunately this never happens (as far as I've tested) :)
+						el.focus();
+						return false;
+					}
+				}
+			}
+		}
 		createElement(name, proprieties, styles) {
 			let el = this.document.createElement(name);
 			for (let [propriety, value] of Object.entries(proprieties || {})) {
