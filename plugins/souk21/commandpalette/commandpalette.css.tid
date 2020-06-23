@@ -1,9 +1,15 @@
+created: 20200603190000307
+modified: 20200623022617588
+tags: $:/tags/Stylesheet
+title: $:/plugins/souk21/commandpalette/commandpalette.css
+type: text/vnd.tiddlywiki
+
 :root {
     --palette-radius: 5px;
 }
 .commandpalette {
     position: fixed;
-    background: #ddd;
+    background:<<colour page-background>>;
     z-index: 9999999;
     left: 50%;
     top: 10%;
@@ -19,7 +25,7 @@
 .commandpalette input {
     border: 0;
     height: 40px;
-    color: #515151;
+    color: <<colour foreground>>;
     border-radius: var(--palette-radius) var(--palette-radius) 0px 0px;
     padding-left: 11px;
     padding-right: 120px;
@@ -27,22 +33,22 @@
     outline: 0;
 }
 .commandpalettehint {
-    color:gray;
+    color:  <<colour foreground>>;
     font-size: 13px;
     text-align: right;
     flex-shrink: 0;
     padding-right: 7px;
 }
 .commandpaletteresultselected>.commandpalettehint {
-    color: white;
+    color: <<colour background>>;
 }
 .commandpalettehintmain {
     top: 10px;
 }
 .commandpaletteresult {
-    background: #f7f7f7;
+    background: <<colour background>>;
     font-size: 15px;
-    color: #333;
+    color: <<colour foreground>>; 
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -52,14 +58,14 @@
     cursor: pointer;
 }
 .commandpaletteresult:not(:last-child) {
-    border-bottom: #e6e6e6 solid 1px;
+    border-bottom: <<colour page-background>> solid 1px;
 }
 .commandpaletteresult:hover:not(.commandpaletteresultselected) {
-    background: hsl(221, 63%, 92%);
+    background: <<colour page-background>>;
 }
 .commandpaletteresultselected {
-    background: #4780ec;
-    color: white;
+    background: <<colour primary>>;
+    color: <<colour page-background>>;
 }
 .cp-scroll{
     max-height: 50vh;
