@@ -55,6 +55,10 @@ Command Palette Widget
 			</$fieldmangler>`;
 			this.invokeActionString(action, this, e);
 		}
+		
+		themeEnabled(themeName) {
+			return this.wiki.getTiddler(themeName).fields.tags.includes('$:/tags/Stylesheet');
+		}
 
 		//filter = (tiddler, terms) => [tiddlers]
 		tagOperation(e, hintTiddler, hintTag, filter, allowNoSelection, message) {
@@ -98,7 +102,9 @@ Command Palette Widget
 				let themeName = theme.fields.title;
 				if (themeName === this.settings.theme) {
 					found = true;
-					this.invokeFieldMangler(themeName, 'tm-add-tag', '$:/tags/Stylesheet', e);
+					if (!this.themeIsEnabled(themeName)) {
+						this.invokeFieldMangler(themeName, 'tm-add-tag', '$:/tags/Stylesheet', e);
+					}
 				} else {
 					this.invokeFieldMangler(themeName, 'tm-remove-tag', '$:/tags/Stylesheet', e);
 				}
