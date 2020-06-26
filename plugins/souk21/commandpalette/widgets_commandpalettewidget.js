@@ -98,13 +98,23 @@ Command Palette Widget
 				let themeName = theme.fields.title;
 				if (themeName === this.settings.theme) {
 					found = true;
-					this.invokeFieldMangler(themeName, 'tm-add-tag', '$:/tags/Stylesheet', e);
+					this.addTagIfNecessary(themeName, '$:/tags/Stylesheet', e);
 				} else {
 					this.invokeFieldMangler(themeName, 'tm-remove-tag', '$:/tags/Stylesheet', e);
 				}
 			}
 			if (found) return;
-			this.invokeFieldMangler(this.defaultSettings.theme, 'tm-add-tag', this.themesTag, e);
+			this.addTagIfNecessary(this.defaultSettings.theme, '$:/tags/Stylesheet', e);
+		}
+
+		//Re-adding an existing tag changes modification date
+		addTagIfNecessary(tiddler, tag, e) {
+			if (this.hasTag(tiddler, tag)) return;
+			this.invokeFieldMangler(tiddler, 'tm-add-tag', tag, e);
+		}
+
+		hasTag(tiddler, tag) {
+			return $tw.wiki.getTiddler(tiddler).fields.tags.includes(tag);
 		}
 
 		refreshCommands() {
