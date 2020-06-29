@@ -466,8 +466,6 @@ Command Palette Widget
 		onClick(e) {
 			if (this.isOpened && !this.div.contains(e.target)) {
 				this.closePalette();
-				e.preventDefault();
-				e.stopPropagation();
 			}
 		}
 		openPaletteSelection(e) {
