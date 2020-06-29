@@ -30,7 +30,7 @@ Command Palette Widget
 				escapeGoesBack: true,
 				alwaysPassSelection: true,
 				theme: '$:/plugins/souk21/commandpalette/Compact.css',
-			}
+			};
 			this.settings = {};
 			this.commandHistoryPath = '$:/plugins/souk21/commandpalette/CommandPaletteHistory';
 			this.settingsPath = '$:/plugins/souk21/commandpalette/CommandPaletteSettings';
@@ -344,7 +344,7 @@ Command Palette Widget
 			$tw.rootWidget.addEventListener('open-command-palette-selection', (e) => this.openPaletteSelection(e));
 			$tw.rootWidget.addEventListener('insert-command-palette-result', (e) => this.insertSelectedResult(e));
 
-			let inputAndMainHintWrapper = this.createElement('div', {className: 'inputhintwrapper'});
+			let inputAndMainHintWrapper = this.createElement('div', { className: 'inputhintwrapper' });
 			this.div = this.createElement('div', { className: 'commandpalette' }, { display: 'none' });
 			this.input = this.createElement('input', { type: 'text' });
 			this.hint = this.createElement('div', { className: 'commandpalettehint commandpalettehintmain' });
@@ -471,7 +471,6 @@ Command Palette Widget
 			}
 		}
 		openPaletteSelection(e) {
-			// let selection = window.getSelection().toString();
 			let selection = this.getCurrentSelection();
 			e.param = selection;
 			this.openPalette(e);
@@ -501,7 +500,7 @@ Command Palette Widget
 			if (this.currentSelection === 0) return; //TODO: what to do here?
 			let previous = this.previouslyFocused;
 			let previousValue = previous.element.value;
-			if (previousValue == undefined) return;
+			if (previousValue === undefined) return;
 			let selection = this.currentResults[this.currentSelection - 1].result.name;
 			if (previous.start !== previous.end) {
 				this.previouslyFocused.element.value = previousValue.substring(0, previous.start) + selection + previousValue.substring(previous.end);
@@ -576,7 +575,7 @@ Command Palette Widget
 				this.createTiddlerResolver(e);
 				return;
 			}
-			if (this.currentSelection == 0) return;
+			if (this.currentSelection === 0) return;
 			let selectionTitle = this.currentResults[this.currentSelection - 1].result.name;
 			this.closePalette();
 			this.navigateTo(selectionTitle);
