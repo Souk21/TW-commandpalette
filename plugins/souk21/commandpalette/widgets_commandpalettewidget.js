@@ -41,12 +41,26 @@ Command Palette Widget
 			this.nameField = 'command-palette-name';
 			this.hintField = 'cp-hint';
 			this.modeField = 'command-palette-mode';
+			this.userInputField = 'command-palette-user-input';
 			this.caretField = 'command-palette-caret';
 			this.immediateField = 'command-palette-immediate';
 		}
 
 		actionStringBuilder(text) {
 			return (e) => this.invokeActionString(text, this, e);
+		}
+
+		actionStringInput(action, e) {
+			this.blockProviderChange = true;
+			this.allowInputFieldSelection = true;
+			this.input.value = '';
+			this.currentProvider = () => {};
+			this.currentResolver = (e) => {
+				this.invokeActionString(action, this, e, {'commandpaletteinput' : this.input.value});
+				this.closePalette();
+			}
+			this.showResults([]);
+			this.onInput(this.input.value);
 		}
 
 		invokeFieldMangler(tiddler, message, param, e) {
@@ -168,7 +182,12 @@ Command Palette Widget
 					continue;
 				}
 				if (type === 'actionString') {
-					this.actions.push({ name: name, action: (e) => this.actionStringBuilder(text)(e) });
+					let userInput = tiddler.fields[this.userInputField] !== undefined && tiddler.fields[this.userInputField] === 'true';
+					if (userInput) {
+						this.actions.push({name: name, action: (e) => this.actionStringInput(text, e), keepPalette: true});
+					} else {
+						this.actions.push({ name: name, action: (e) => this.actionStringBuilder(text)(e) });
+					}
 					continue;
 				}
 				if (type === 'history') {
