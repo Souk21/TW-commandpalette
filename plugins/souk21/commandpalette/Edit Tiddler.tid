@@ -1,6 +1,6 @@
 command-palette-name: Edit Tiddler
 command-palette-type: history
-cp-hint: Choose tiddler to edit
+command-palette-hint: Choose tiddler to edit
 created: 20200605211111710
 modified: 20200605211127693
 tags: $:/tags/CommandPaletteCommand

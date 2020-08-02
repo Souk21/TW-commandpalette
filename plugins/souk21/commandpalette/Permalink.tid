@@ -1,6 +1,6 @@
 command-palette-name: Permalink
 command-palette-type: history
-cp-hint: Choose tiddler to permaling
+command-palette-hint: Choose tiddler to permaling
 created: 20200605211220042
 modified: 20200605211221257
 tags: $:/tags/CommandPaletteCommand

@@ -39,7 +39,7 @@ Command Palette Widget
 			this.themesTag = '$:/tags/CommandPaletteTheme';
 			this.typeField = 'command-palette-type';
 			this.nameField = 'command-palette-name';
-			this.hintField = 'cp-hint';
+			this.hintField = 'command-palette-hint';
 			this.modeField = 'command-palette-mode';
 			this.userInputField = 'command-palette-user-input';
 			this.caretField = 'command-palette-caret';

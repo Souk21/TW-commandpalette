@@ -1,7 +1,7 @@
 command-palette-mode: drafts
 command-palette-name: Cancel Tiddler
 command-palette-type: history
-cp-hint: Choose Draft to cancel
+command-palette-hint: Choose Draft to cancel
 created: 20200605221333412
 modified: 20200605221425246
 tags: $:/tags/CommandPaletteCommand

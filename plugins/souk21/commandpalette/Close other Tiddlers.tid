@@ -1,6 +1,6 @@
 command-palette-name: Close other Tiddlers
 command-palette-type: history
-cp-hint: Choose tiddler to keep
+command-palette-hint: Choose tiddler to keep
 created: 20200605211357951
 modified: 20200605211404900
 tags: $:/tags/CommandPaletteCommand

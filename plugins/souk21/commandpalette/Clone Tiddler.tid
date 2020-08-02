@@ -1,6 +1,6 @@
 command-palette-name: Clone Tiddler
 command-palette-type: history
-cp-hint: Chose tiddler to clone
+command-palette-hint: Chose tiddler to clone
 created: 20200605211432310
 modified: 20200605211434831
 tags: $:/tags/CommandPaletteCommand
