@@ -50,9 +50,10 @@ Command Palette Widget
 			return (e) => this.invokeActionString(text, this, e);
 		}
 
-		actionStringInput(action, e) {
+		actionStringInput(action, hint, e) {
 			this.blockProviderChange = true;
 			this.allowInputFieldSelection = true;
+			this.hint.innerText = hint;
 			this.input.value = '';
 			this.currentProvider = () => {};
 			this.currentResolver = (e) => {
@@ -163,6 +164,7 @@ Command Palette Widget
 				let text = tiddler.fields.text;
 				if (text === undefined) text = '';
 				let textFirstLine = text.match(/^.*/)[0];
+				let hint = tiddler.fields[this.hintField] === undefined ? name : tiddler.fields[this.hintField];
 
 				if (type === 'prompt') {
 					let immediate = !!tiddler.fields[this.immediateField];
@@ -173,7 +175,7 @@ Command Palette Widget
 				}
 				if (type === 'prompt-basic') {
 					let caret = tiddler.fields[this.caretField];
-					let action = { name: name, action: () => this.promptCommandBasic(textFirstLine, caret, name), keepPalette: true };
+					let action = { name: name, action: () => this.promptCommandBasic(textFirstLine, caret, hint), keepPalette: true };
 					this.actions.push(action);
 					continue;
 				}
@@ -184,14 +186,13 @@ Command Palette Widget
 				if (type === 'actionString') {
 					let userInput = tiddler.fields[this.userInputField] !== undefined && tiddler.fields[this.userInputField] === 'true';
 					if (userInput) {
-						this.actions.push({name: name, action: (e) => this.actionStringInput(text, e), keepPalette: true});
+						this.actions.push({name: name, action: (e) => this.actionStringInput(text, hint, e), keepPalette: true});
 					} else {
 						this.actions.push({ name: name, action: (e) => this.actionStringBuilder(text)(e) });
 					}
 					continue;
 				}
 				if (type === 'history') {
-					let hint = tiddler.fields[this.hintField];
 					let mode = tiddler.fields[this.modeField];
 					this.actions.push({ name: name, action: (e) => this.commandWithHistoryPicker(textFirstLine, hint, mode).handler(e), keepPalette: true });
 					continue;
