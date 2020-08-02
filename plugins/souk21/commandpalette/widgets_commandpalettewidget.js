@@ -21,6 +21,7 @@ Command Palette Widget
 			this.currentSelection = 0; //0 is nothing selected, 1 is first result,...
 			this.symbolProviders = {};
 			this.actions = [];
+			this.triggers = [];
 			this.blockProviderChange = false;
 			this.defaultSettings = {
 				maxResults: 15,
@@ -44,6 +45,7 @@ Command Palette Widget
 			this.userInputField = 'command-palette-user-input';
 			this.caretField = 'command-palette-caret';
 			this.immediateField = 'command-palette-immediate';
+			this.triggerField = 'command-palette-trigger';
 		}
 
 		actionStringBuilder(text) {
@@ -55,9 +57,9 @@ Command Palette Widget
 			this.allowInputFieldSelection = true;
 			this.hint.innerText = hint;
 			this.input.value = '';
-			this.currentProvider = () => {};
+			this.currentProvider = () => { };
 			this.currentResolver = (e) => {
-				this.invokeActionString(action, this, e, {'commandpaletteinput' : this.input.value});
+				this.invokeActionString(action, this, e, { 'commandpaletteinput': this.input.value });
 				this.closePalette();
 			}
 			this.showResults([]);
@@ -157,15 +159,22 @@ Command Palette Widget
 
 			let commandTiddlers = this.getTiddlersWithTag(this.customCommandsTag);
 			for (let tiddler of commandTiddlers) {
-				if (!tiddler.fields[this.nameField] === undefined) continue;
 				if (!tiddler.fields[this.typeField] === undefined) continue;
 				let name = tiddler.fields[this.nameField];
 				let type = tiddler.fields[this.typeField];
 				let text = tiddler.fields.text;
 				if (text === undefined) text = '';
 				let textFirstLine = text.match(/^.*/)[0];
-				let hint = tiddler.fields[this.hintField] === undefined ? name : tiddler.fields[this.hintField];
-
+				let hint = tiddler.fields[this.hintField];
+				if (hint === undefined) hint = tiddler.fields[this.nameField];
+				if (hint === undefined) hint = '';
+				if (type === 'shortcut') {
+					let trigger = tiddler.fields[this.triggerField];
+					if (trigger === undefined) continue;
+					this.triggers.push({ name, trigger, text, hint });
+					continue;
+				}
+				if (!tiddler.fields[this.nameField] === undefined) continue;
 				if (type === 'prompt') {
 					let immediate = !!tiddler.fields[this.immediateField];
 					let caret = tiddler.fields[this.caretField];
@@ -186,7 +195,7 @@ Command Palette Widget
 				if (type === 'actionString') {
 					let userInput = tiddler.fields[this.userInputField] !== undefined && tiddler.fields[this.userInputField] === 'true';
 					if (userInput) {
-						this.actions.push({name: name, action: (e) => this.actionStringInput(text, hint, e), keepPalette: true});
+						this.actions.push({ name: name, action: (e) => this.actionStringInput(text, hint, e), keepPalette: true });
 					} else {
 						this.actions.push({ name: name, action: (e) => this.actionStringBuilder(text)(e) });
 					}
@@ -470,18 +479,31 @@ Command Palette Widget
 			let prefix = text.substr(0, 1);
 			let resolver;
 			let provider;
-			let providerSymbol = Object.keys(this.symbolProviders).find(p => p === prefix);
-			if (providerSymbol === undefined) {
-				resolver = this.defaultResolver;
-				provider = this.defaultProvider;
-				terms = text;
+			let shortcut = this.triggers.find(t => text.startsWith(t.trigger));
+			if (shortcut !== undefined) {
+				resolver = (e) => {
+					let inputWithoutShortcut = this.input.value.substr(shortcut.trigger.length);
+					this.invokeActionString(shortcut.text, this, e, { 'commandpaletteinput': inputWithoutShortcut });
+					this.closePalette();
+				}
+				provider = (terms) => {
+					this.hint.innerText = shortcut.hint;
+					this.showResults([]);
+				}
+			} else {
+				let providerSymbol = Object.keys(this.symbolProviders).find(p => p === prefix);
+				if (providerSymbol === undefined) {
+					resolver = this.defaultResolver;
+					provider = this.defaultProvider;
+					terms = text;
+				}
+				else {
+					provider = this.symbolProviders[providerSymbol].searcher;
+					resolver = this.symbolProviders[providerSymbol].resolver;
+					terms = text.substring(1);
+				}
 			}
-			else {
-				provider = this.symbolProviders[providerSymbol].searcher;
-				resolver = this.symbolProviders[providerSymbol].resolver;
-				terms = text.substring(1);
-			}
-			return { prefix: providerSymbol, resolver, provider, terms }
+			return { resolver, provider, terms }
 		}
 		onClick(e) {
 			if (this.isOpened && !this.div.contains(e.target)) {
