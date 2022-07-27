@@ -22,6 +22,7 @@ Command Palette Widget
 			this.symbolProviders = {};
 			this.actions = [];
 			this.triggers = [];
+			this.prefixes = [];
 			this.blockProviderChange = false;
 			this.defaultSettings = {
 				maxResults: 15,
@@ -46,6 +47,7 @@ Command Palette Widget
 			this.caretField = 'command-palette-caret';
 			this.immediateField = 'command-palette-immediate';
 			this.triggerField = 'command-palette-trigger';
+			this.prefixField = 'command-palette-prefix';
 		}
 
 		actionStringBuilder(text) {
@@ -160,7 +162,6 @@ Command Palette Widget
 			let commandTiddlers = this.getTiddlersWithTag(this.customCommandsTag);
 			for (let tiddler of commandTiddlers) {
 				if (!tiddler.fields[this.typeField] === undefined) continue;
-				let name = tiddler.fields[this.nameField];
 				let type = tiddler.fields[this.typeField];
 				let text = tiddler.fields.text;
 				if (text === undefined) text = '';
@@ -171,10 +172,11 @@ Command Palette Widget
 				if (type === 'shortcut') {
 					let trigger = tiddler.fields[this.triggerField];
 					if (trigger === undefined) continue;
-					this.triggers.push({ name, trigger, text, hint });
+					this.triggers.push({ trigger, text, hint });
 					continue;
 				}
 				if (!tiddler.fields[this.nameField] === undefined) continue;
+				let name = tiddler.fields[this.nameField];
 				if (type === 'prompt') {
 					let immediate = !!tiddler.fields[this.immediateField];
 					let caret = tiddler.fields[this.caretField];
@@ -185,6 +187,15 @@ Command Palette Widget
 				if (type === 'prompt-basic') {
 					let caret = tiddler.fields[this.caretField];
 					let action = { name: name, action: () => this.promptCommandBasic(textFirstLine, caret, hint), keepPalette: true };
+					let prefix = tiddler.fields[this.prefixField];
+					if (prefix !== undefined) {
+						this.symbolProviders[prefix] = {
+							provider: this.prefixedBasicProviderBuilder(textFirstLine, caret, hint),
+							//resolver is set in provider by parsing the input without the prefix
+							resolver: undefined,
+						};
+						this.prefixes.push({ prefix, hint })
+					}
 					this.actions.push(action);
 					continue;
 				}
@@ -242,7 +253,6 @@ Command Palette Widget
 					messageStep();
 				}
 			}
-
 
 			let typeStep = () => {
 				this.input.value = '';
@@ -382,18 +392,20 @@ Command Palette Widget
 			this.div.append(inputAndMainHintWrapper, this.scrollDiv);
 			this.input.addEventListener('keydown', (e) => this.onKeyDown(e));
 			this.input.addEventListener('input', () => this.onInput(this.input.value));
+			this.input.addEventListener('compositionstart', () => this.isUsingIME = true)
+			this.input.addEventListener('compositionend', () => this.isUsingIME = false)
 			window.addEventListener('click', (e) => this.onClick(e));
 			parent.insertBefore(this.div, nextSibling);
 
 			this.refreshCommandPalette();
 
-			this.symbolProviders['>'] = { searcher: (terms) => this.actionProvider(terms), resolver: (e) => this.actionResolver(e) };
-			this.symbolProviders['#'] = { searcher: (terms) => this.tagListProvider(terms), resolver: (e) => this.tagListResolver(e) };
-			this.symbolProviders['@'] = { searcher: (terms) => this.tagProvider(terms), resolver: (e) => this.defaultResolver(e) };
-			this.symbolProviders['?'] = { searcher: (terms) => this.helpProvider(terms), resolver: (e) => this.helpResolver(e) };
-			this.symbolProviders['['] = { searcher: (terms, hint) => this.filterProvider(terms, hint), resolver: (e) => this.filterResolver(e) };
-			this.symbolProviders['+'] = { searcher: (terms) => this.createTiddlerProvider(terms), resolver: (e) => this.createTiddlerResolver() };
-			this.symbolProviders['|'] = { searcher: (terms) => this.settingsProvider(terms), resolver: (e) => this.settingsResolver() };
+			this.symbolProviders['>'] = { provider: (terms) => this.actionProvider(terms), resolver: (e) => this.actionResolver(e) };
+			this.symbolProviders['#'] = { provider: (terms) => this.tagListProvider(terms), resolver: (e) => this.tagListResolver(e) };
+			this.symbolProviders['@'] = { provider: (terms) => this.tagProvider(terms), resolver: (e) => this.defaultResolver(e) };
+			this.symbolProviders['?'] = { provider: (terms) => this.helpProvider(terms), resolver: (e) => this.helpResolver(e) };
+			this.symbolProviders['['] = { provider: (terms, hint) => this.filterProvider(terms, hint), resolver: (e) => this.filterResolver(e) };
+			this.symbolProviders['+'] = { provider: (terms) => this.createTiddlerProvider(terms), resolver: (e) => this.createTiddlerResolver() };
+			this.symbolProviders['|'] = { provider: (terms) => this.settingsProvider(terms), resolver: (e) => this.settingsResolver() };
 			this.currentResults = [];
 			this.currentProvider = {};
 		}
@@ -476,7 +488,6 @@ Command Palette Widget
 		}
 		parseCommand(text) {
 			let terms = "";
-			let prefix = text.substr(0, 1);
 			let resolver;
 			let provider;
 			let shortcut = this.triggers.find(t => text.startsWith(t.trigger));
@@ -491,16 +502,20 @@ Command Palette Widget
 					this.showResults([]);
 				}
 			} else {
-				let providerSymbol = Object.keys(this.symbolProviders).find(p => p === prefix);
+				let providerSymbol = undefined;
+				for (let prefix in this.symbolProviders) {
+					if (text.startsWith(prefix) && (providerSymbol === undefined || providerSymbol.length < prefix.length)) {
+						providerSymbol = prefix;
+					}
+				}
 				if (providerSymbol === undefined) {
 					resolver = this.defaultResolver;
 					provider = this.defaultProvider;
 					terms = text;
-				}
-				else {
-					provider = this.symbolProviders[providerSymbol].searcher;
+				} else {
+					provider = this.symbolProviders[providerSymbol].provider;
 					resolver = this.symbolProviders[providerSymbol].resolver;
-					terms = text.substring(1);
+					terms = text.substring(providerSymbol.length);
 				}
 			}
 			return { resolver, provider, terms }
@@ -589,7 +604,7 @@ Command Palette Widget
 				}
 				this.setSelection(sel);
 			}
-			else if (e.key === 'Enter') {
+			else if (e.key === 'Enter' && !this.isUsingIME) {
 				e.preventDefault();
 				e.stopPropagation();
 				this.validateSelection(e);
@@ -934,6 +949,10 @@ Command Palette Widget
 				{ name: '\\ Escape first character', action: () => this.promptCommand('\\') },
 				{ name: '? Help', action: () => this.promptCommand('?') },
 			];
+			this.prefixes.forEach(p => searches.push({
+				name: p.prefix + " " + p.hint,
+				action: () => this.promptCommand(p.prefix),
+			}))
 			this.showResults(searches);
 		}
 
@@ -1066,6 +1085,18 @@ Command Palette Widget
 			let start = value.substr(0, caret);
 			let end = value.substr(caret);
 			return (input) => {
+				let { resolver, provider, terms } = this.parseCommand(start + input + end);
+				let backgroundProvider = provider;
+				backgroundProvider(terms, hint);
+				this.currentResolver = resolver;
+			}
+		}
+
+		prefixedBasicProviderBuilder(value, caret, hint, prefixLength) {
+			let start = value.substr(0, caret);
+			let end = value.substr(caret);
+			return (input) => {
+				input = input.substring(prefixLength);
 				let { resolver, provider, terms } = this.parseCommand(start + input + end);
 				let backgroundProvider = provider;
 				backgroundProvider(terms, hint);

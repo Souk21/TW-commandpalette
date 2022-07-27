@@ -3,18 +3,15 @@ A command palette for TiddlyWiki
 
 [Demo Page](https://souk21.github.io/TW-commandpalette/)
 
-This is a prototype, don't use with your wiki
+Please backup your wiki before installing this plugin
 
-## Roadmap
-
+### Ideas:
 - Modularize (Core plugin contains only basic commands (or none?) sub-plugins add different types of commands)
 - Create commands for all features from 'Tools' tab (import,...)
 - Profiles (Different search order, hide/show commands/modules, switchable with command/shorcut)
 - Theming
 - Server module (messaging server, tiddlywiki node.js commands)
 - Pipe/chain commands, BulkActions (Apply a command to a filter operation, e.g add field for all tiddler tagged with)
-
-### Ideas:
 - Filter operation history (with tiddler history? or when input is `[` ?)
 - Context in results ?
 - Highlight match in results ?
