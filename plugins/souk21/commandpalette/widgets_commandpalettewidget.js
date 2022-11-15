@@ -748,10 +748,10 @@ Command Palette Widget
 					search = filter.substr(0, caret) + terms + filter.substr(caret);
 				}
 				else if (filter.indexOf("regexp") !== -1) {
-					search = filter.replace("%s", Utils.escapeRegExp(terms));
+					search = filter.replace(/%s/g, Utils.escapeRegExp(terms));
 				}
 				else {
-					search = filter.replace("%s", terms);
+					search = filter.replace(/%s/g, terms);
 				}
 				let results = $tw.wiki.filterTiddlers(search).map(s => { return { name: s, hint: hint } });
 				return results;
