@@ -1,8 +1,8 @@
 {
     "steps": [
-          {"filter": "[!is[system]search:title[%s]]", "hint": "in title"},
-          {"filter": "[all[system+shadows]search:title[%s]]", "hint": "in title (system)"},
-          {"filter": "[search[%s]]", "hint": "all"},
-          {"filter": "[all[shadows]search[%s]]", "hint": "shadows"}
+          {"filter": "[!is[system]search:title<query>]", "queryTransformFilter": "", "hint": "in title"},
+          {"filter": "[all[system+shadows]search:title<query>]", "queryTransformFilter": "", "hint": "in title (system)"},
+          {"filter": "[search<query>]", "queryTransformFilter": "", "hint": "all"},
+          {"filter": "[all[shadows]search<query>]", "queryTransformFilter": "", "hint": "shadows"}
     ]
 }

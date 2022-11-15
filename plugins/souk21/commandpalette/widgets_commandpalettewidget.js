@@ -416,7 +416,7 @@ Command Palette Widget
 			let steps = $tw.wiki.getTiddlerData(this.searchStepsPath);
 			steps = steps.steps;
 			for (let step of steps) {
-				this.searchSteps.push(this.searchStepBuilder(step.filter, step.caret, step.hint));
+				this.searchSteps.push(this.searchStepBuilder(step.filter, step.hint, step.queryTransformFilter, step.caret));
 			}
 		}
 
@@ -740,24 +740,37 @@ Command Palette Widget
 			this.showResults(searches);
 		}
 
-		searchStepBuilder(filter, caret, hint) {
+		searchStepBuilder(filter, hint, queryTransformFilter, caret) {
 			return (terms) => {
-				let search = "";
+				let search = filter;
+				let fakeWidget = undefined;
 				if (caret) {
 					// Use legacy "caret" logic
 					search = filter.substr(0, caret) + terms + filter.substr(caret);
 				}
-				else if (filter.indexOf("regexp") !== -1) {
-					search = filter.replace(/%s/g, Utils.escapeRegExp(terms));
-				}
 				else {
-					search = filter.replace(/%s/g, terms);
+					fakeWidget = this.makeFakeVariableWidget("query", terms);
+					if (queryTransformFilter) {
+						let transformedQuery = $tw.wiki.filterTiddlers(queryTransformFilter, fakeWidget)[0];
+						fakeWidget = this.makeFakeVariableWidget("query", transformedQuery);
+					}
 				}
-				let results = $tw.wiki.filterTiddlers(search).map(s => { return { name: s, hint: hint } });
-				return results;
+				return $tw.wiki.filterTiddlers(search, fakeWidget).map(s => { return { name: s, hint: hint } });
 			}
 		}
 
+		/** Create a minimal "widget" object that returns a specific variable value */
+		makeFakeVariableWidget(name, value) {
+			return {
+				getVariable: (_name) => {
+					if (_name === name)
+						return value;
+					else
+						return "";
+				}
+			};
+		}
+		
 		tagListProvider(terms) {
 			this.currentSelection = 0;
 			this.hint.innerText = 'Search tags';
