@@ -13,6 +13,7 @@ Command Palette Widget
 	'use strict';
 
 	var Widget = require('$:/core/modules/widgets/widget.js').widget;
+	var Utils = require("$:/core/modules/utils/utils.js");
 
 	class CommandPaletteWidget extends Widget {
 		constructor(parseTreeNode, options) {
@@ -741,7 +742,17 @@ Command Palette Widget
 
 		searchStepBuilder(filter, caret, hint) {
 			return (terms) => {
-				let search = filter.substr(0, caret) + terms + filter.substr(caret);
+				let search = "";
+				if (caret) {
+					// Use legacy "caret" logic
+					search = filter.substr(0, caret) + terms + filter.substr(caret);
+				}
+				else if (filter.indexOf("regexp[") !== -1 || filter.indexOf("regexp:title[") !== -1) {
+					search = filter.replace("%s", Utils.escapeRegExp(terms));
+				}
+				else {
+					search = filter.replace("%s", terms);
+				}
 				let results = $tw.wiki.filterTiddlers(search).map(s => { return { name: s, hint: hint } });
 				return results;
 			}
