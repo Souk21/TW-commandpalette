@@ -13,6 +13,7 @@ Command Palette Widget
 	'use strict';
 
 	var Widget = require('$:/core/modules/widgets/widget.js').widget;
+	var Utils = require("$:/core/modules/utils/utils.js");
 
 	class CommandPaletteWidget extends Widget {
 		constructor(parseTreeNode, options) {
@@ -727,14 +728,31 @@ Command Palette Widget
 			}
 			else {
 				searches = this.searchSteps.reduce((a, c) => [...a, ...c(terms)], []);
-				searches = Array.from(new Set(searches));
+				let _unique = new Set();
+				// Filter search results to only get the first unique occurence of every tiddler name
+				searches = searches.filter(s => {
+					if (_unique.has(s.name))
+						return false;
+					_unique.add(s.name);
+					return true;
+				});
 			}
 			this.showResults(searches);
 		}
 
 		searchStepBuilder(filter, caret, hint) {
 			return (terms) => {
-				let search = filter.substr(0, caret) + terms + filter.substr(caret);
+				let search = "";
+				if (caret) {
+					// Use legacy "caret" logic
+					search = filter.substr(0, caret) + terms + filter.substr(caret);
+				}
+				else if (filter.indexOf("regexp") !== -1) {
+					search = filter.replace(/%s/g, Utils.escapeRegExp(terms));
+				}
+				else {
+					search = filter.replace(/%s/g, terms);
+				}
 				let results = $tw.wiki.filterTiddlers(search).map(s => { return { name: s, hint: hint } });
 				return results;
 			}
