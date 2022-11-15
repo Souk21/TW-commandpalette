@@ -727,7 +727,14 @@ Command Palette Widget
 			}
 			else {
 				searches = this.searchSteps.reduce((a, c) => [...a, ...c(terms)], []);
-				searches = Array.from(new Set(searches));
+				let _unique = new Set();
+				// Filter search results to only get the first unique occurence of every tiddler name
+				searches = searches.filter(s => {
+					if (_unique.has(s.name))
+						return false;
+					_unique.add(s.name);
+					return true;
+				});
 			}
 			this.showResults(searches);
 		}
