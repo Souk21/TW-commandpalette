@@ -747,7 +747,7 @@ Command Palette Widget
 					// Use legacy "caret" logic
 					search = filter.substr(0, caret) + terms + filter.substr(caret);
 				}
-				else if (filter.indexOf("regexp[") !== -1 || filter.indexOf("regexp:title[") !== -1) {
+				else if (filter.indexOf("regexp") !== -1) {
 					search = filter.replace("%s", Utils.escapeRegExp(terms));
 				}
 				else {
