@@ -13,7 +13,6 @@ Command Palette Widget
 	'use strict';
 
 	var Widget = require('$:/core/modules/widgets/widget.js').widget;
-	var Utils = require("$:/core/modules/utils/utils.js");
 
 	class CommandPaletteWidget extends Widget {
 		constructor(parseTreeNode, options) {
@@ -770,7 +769,7 @@ Command Palette Widget
 				}
 			};
 		}
-		
+
 		tagListProvider(terms) {
 			this.currentSelection = 0;
 			this.hint.innerText = 'Search tags';
