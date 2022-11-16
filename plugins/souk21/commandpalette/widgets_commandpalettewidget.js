@@ -415,7 +415,7 @@ Command Palette Widget
 			let steps = $tw.wiki.getTiddlerData(this.searchStepsPath);
 			steps = steps.steps;
 			for (let step of steps) {
-				this.searchSteps.push(this.searchStepBuilder(step.filter, step.caret, step.hint));
+				this.searchSteps.push(this.searchStepBuilder(step.filter, step.hint, step.queryTransformFilter, step.caret));
 			}
 		}
 
@@ -727,17 +727,47 @@ Command Palette Widget
 			}
 			else {
 				searches = this.searchSteps.reduce((a, c) => [...a, ...c(terms)], []);
-				searches = Array.from(new Set(searches));
+				let _unique = new Set();
+				// Filter search results to only get the first unique occurence of every tiddler name
+				searches = searches.filter(s => {
+					if (_unique.has(s.name))
+						return false;
+					_unique.add(s.name);
+					return true;
+				});
 			}
 			this.showResults(searches);
 		}
 
-		searchStepBuilder(filter, caret, hint) {
+		searchStepBuilder(filter, hint, queryTransformFilter, caret) {
 			return (terms) => {
-				let search = filter.substr(0, caret) + terms + filter.substr(caret);
-				let results = $tw.wiki.filterTiddlers(search).map(s => { return { name: s, hint: hint } });
-				return results;
+				let search = filter;
+				let fakeWidget = undefined;
+				if (caret) {
+					// Use legacy "caret" logic
+					search = filter.substr(0, caret) + terms + filter.substr(caret);
+				}
+				else {
+					fakeWidget = this.makeFakeVariableWidget("query", terms);
+					if (queryTransformFilter) {
+						let transformedQuery = $tw.wiki.filterTiddlers(queryTransformFilter, fakeWidget)[0];
+						fakeWidget = this.makeFakeVariableWidget("query", transformedQuery);
+					}
+				}
+				return $tw.wiki.filterTiddlers(search, fakeWidget).map(s => { return { name: s, hint: hint } });
 			}
+		}
+
+		/** Create a minimal "widget" object that returns a specific variable value */
+		makeFakeVariableWidget(name, value) {
+			return {
+				getVariable: (_name) => {
+					if (_name === name)
+						return value;
+					else
+						return "";
+				}
+			};
 		}
 
 		tagListProvider(terms) {
